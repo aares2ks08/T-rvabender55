@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat Room</title>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <h2>Chat Room</h2>
+  <div id="messages"></div>
+  <form id="form">
+    <input id="input" autocomplete="off" placeholder="Type message..."><button>Send</button>
+  </form>
+  <form action="/upload" method="POST" enctype="multipart/form-data">
+    <input type="file" name="image" required>
+    <button type="submit">Upload Image</button>
+  </form>
+  <script>
+    const socket = io();
+    const params = new URLSearchParams(window.location.search);
+    const user = params.get('user') || 'Anonymous';
+
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const messages = document.getElementById('messages');
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      if (input.value) {
+        socket.emit('chat message', { user, text: input.value });
+        input.value = '';
+      }
+    });
+
+    socket.on('chat message', msg => {
+      const item = document.createElement('div');
+      if (msg.text.startsWith('/uploads/')) {
+        item.innerHTML = `<b>${msg.user}:</b> <img src="${msg.text}" style="max-width:200px;">`;
+      } else {
+        item.textContent = `${msg.user}: ${msg.text}`;
+      }
+      messages.appendChild(item);
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+  </script>
+</body>
+</html>
